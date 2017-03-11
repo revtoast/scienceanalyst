@@ -1,6 +1,9 @@
 import ignore
 import json
+import matplotlib.pyplot as plt
+import numpy as np
 import os
+import pandas as pd
 import sys
 from tweepy import API
 from tweepy import OAuthHandler
@@ -52,7 +55,7 @@ def user_timeline_to_jsonl(user):
                 f.write(json.dumps(status._json)+"\n")
     f.close()
 
-#this function could be improved by using "entities" -> which is a dictionary of
+#search_hashtags_in_jsonl(user) function could be improved by using "entities" -> which is a dictionary of
 #urls, hashtags and mentions in the tweet (jsonl feature!)
 '''
 "entities": {
@@ -71,16 +74,25 @@ def search_hashtags_in_jsonl(user):
 
     with open (userFile, 'r') as f:
         for line in f:
-            liste = re.findall(r"#\w+", str(json.loads(line)))
+            liste = re.findall(r"#\w+", str(json.loads(line))) #finds all hash signs followed by letters or numbers
 
             for item in liste:
-                item = item.replace('\xf6', '') #replaces Ö
-                item = item.replace('\xe4', '') #replaces Ä
+                item = return_umlaute(item)
                 hashliste.append(item)
 
     return hashliste
 
-def create_hashtag_usage_dictionary(user)
+def return_umlaute(item):
+    item = item.replace('\xe4', 'ae') #replaces ä
+    item = item.replace('\xc4', 'Ae') #replaces Ä
+    item = item.replace('\xf6', 'oe') #replaces ö
+    item = item.replace('\xd6', 'Oe') #replaces Ö
+    item = item.replace('\xfc', 'ue') #replaces ü
+    item = item.replace('\xdc', 'Ue') #replaces Ü
+    return item
+
+#shit - super slow - use pandas.df instead!
+def create_hashtag_usage_dictionary(user):
     hashoccurence = {}
     hashliste = search_hashtags_in_jsonl(user)
     for item in hashliste:
@@ -90,3 +102,6 @@ def create_hashtag_usage_dictionary(user)
         #print(len(hashliste))
         for w in sorted(hashoccurence, key=hashoccurence.get, reverse=True):
             print (w, hashoccurence[w])
+
+user_timeline_to_jsonl(user)
+create_hashtag_usage_dictionary(user)
