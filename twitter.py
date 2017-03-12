@@ -1,107 +1,82 @@
 import ignore
-import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import sys
-from tweepy import API
-from tweepy import OAuthHandler
-from tweepy import Cursor
-import re
+from twitterdata_to_json import *
+from tweepy import Stream
+from tweepy.streaming import StreamListener
 
-# -----------------------------
-#
-#     define the user
-#     account to be serialized
-#
-#------------------------------
-user = "lefthand3r"
 
-hashliste = []
+# ----------------------------------------------#
+#                                               #
+#     define the user account to be serialized  #
+#     - all of the following functions          #
+#     are defined in twitterdata_to_json.py     #
+#                                               #
+#-----------------------------------------------#
+user = "PacktPub"
 
 
 
-def twitter_authentication():
-  #returns twitter OAuthHandler object
-    try:
-      #authentication keys have been defined via environment variables in the unix OS
-      #for now these are saved in another py file to not be uploaded to version control
-      consumer_key = ignore.TWITTER_CONSUMER_KEY
-      consumer_secret = ignore.TWITTER_CONSUMER_SECRET
-      access_token = ignore.TWITTER_ACCESS_TOKEN
-      access_secret = ignore.TWITTER_ACCESS_SECRET
-    except KeyError:
-      sys.stderr.write("TWITTER_* environment variables not set\n")
-      sys.exit(1)
+#gathers the maximum amount of tweets (3200?) from the users feed and
+#serializes it as a jsonl file (every line is a "json file")
 
-    auth = OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_secret)
-    return auth
+# user_timeline_to_jsonl(user)
 
-def twitter_login_client():
-    auth = twitter_authentication()
-    client = API(auth)
-    return client
+#searches the jsonl file for '#' followed by letters and/or numbers and adds
+#them to a pandas dataframe for fast
+
+# search_hashtags_in_jsonl(user)
+
+#-----------------------------------------------#
+#                                               #
+#     define the hashtags to look for           #
+#     using the search API                      #
+#                                               #
+#-----------------------------------------------#
 
 
-def user_timeline_to_jsonl(user):
-    client = twitter_login_client()
-    userFile = 'user_time-line_{}.jsonl'.format(user)
+#works but super slow - needs optimization
+search_hashtags = ['science']
+hashtagcount = 0
 
-    with open (userFile, 'w') as f:
-        for page in Cursor(client.user_timeline, screen_name=user, count=200).pages(16):
-            for status in page:
-                f.write(json.dumps(status._json)+"\n")
-    f.close()
+class hashtagcounter(StreamListener):
 
-#search_hashtags_in_jsonl(user) function could be improved by using "entities" -> which is a dictionary of
-#urls, hashtags and mentions in the tweet (jsonl feature!)
-'''
-"entities": {
-    "hashtags": [
-      {
-        "indices": [
-          72,
-          79
-        ],
-        "text": "Python" <- this is the hashtag embedded in the tweet
-      }
-    ]
-'''
-def search_hashtags_in_jsonl(user):
-    userFile = 'user_time-line_{}.jsonl'.format(user)
+    def on_data(self, data):
+        global hashtagcount
+        hashtagcount += 1
+        print (hashtagcount)
+        return(True)
 
-    with open (userFile, 'r') as f:
-        for line in f:
-            liste = re.findall(r"#\w+", str(json.loads(line))) #finds all hash signs followed by letters or numbers
+    def on_error(self, status):
+        print('Error!')
 
-            for item in liste:
-                item = return_umlaute(item)
-                hashliste.append(item)
 
-    return hashliste
+auth = twitter_authentication()
 
-def return_umlaute(item):
-    item = item.replace('\xe4', 'ae') #replaces ä
-    item = item.replace('\xc4', 'Ae') #replaces Ä
-    item = item.replace('\xf6', 'oe') #replaces ö
-    item = item.replace('\xd6', 'Oe') #replaces Ö
-    item = item.replace('\xfc', 'ue') #replaces ü
-    item = item.replace('\xdc', 'Ue') #replaces Ü
-    return item
+Sciencecounter = Stream(auth, hashtagcounter())
+Sciencecounter.filter(track=search_hashtags)
 
-#shit - super slow - use pandas.df instead!
-def create_hashtag_usage_dictionary(user):
+
+
+
+#-----------------------------------------------#
+#                                               #
+#     create the output we use for graphs etc   #
+#                                               #
+#-----------------------------------------------#
+def create_hashtag_usage_dataframe(user):
     hashoccurence = {}
     hashliste = search_hashtags_in_jsonl(user)
     for item in hashliste:
         hashoccurence[item] = hashliste.count(item)
-        #hashliste = set(hashliste)
-        #print(hashliste)
-        #print(len(hashliste))
-        for w in sorted(hashoccurence, key=hashoccurence.get, reverse=True):
-            print (w, hashoccurence[w])
 
-user_timeline_to_jsonl(user)
-create_hashtag_usage_dictionary(user)
+    df = pd.DataFrame()
+    df['hashtag'] = hashoccurence.keys()
+    df['count'] = hashoccurence.values()
+    df = df.sort_values(['count'], ascending=False)
+    return df
+
+
+# print(create_hashtag_usage_dataframe(user))
