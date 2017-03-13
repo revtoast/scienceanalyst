@@ -1,5 +1,6 @@
 import base64
 import ignore
+import json
 import requests
 
 consumer_key = ignore.TWITTER_CONSUMER_KEY
@@ -42,11 +43,11 @@ def super_fast_hashtag_query(query):
     url = 'https://api.twitter.com/1.1/search/tweets.json?q={}'.format(query)
     headers = {'Authorization': 'Bearer '+ bearer_token + '', 'User-Agent': 'science analysis client'}
     r = requests.get(url, headers=headers)
-    hashcounter = 0
-    for item in r:
-        print(item)
-        hashcounter += 1
-    print (hashcounter)
+
+    tweet_dictionary = json.loads(r.text)
+    print(tweet_dictionary['statuses'][0]['text'])
+    print(tweet_dictionary['statuses'][0]['entities']['hashtags'][0]['text'])
+
 
 super_fast_hashtag_query(query)
 
