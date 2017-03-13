@@ -8,3 +8,5 @@ user_time-line_PacktPub.jsonl
 home_timeline.jsonl
 
 __pycache__/ignore.cpython-36.pyc
+
+*.pyc
