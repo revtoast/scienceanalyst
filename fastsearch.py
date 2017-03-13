@@ -49,3 +49,9 @@ def super_fast_hashtag_query(query):
     print (hashcounter)
 
 super_fast_hashtag_query(query)
+
+# **************      for the DF we need      ************** #
+# - time or tweetID as index
+# - hashtags
+# - userID
+# - tweettext
