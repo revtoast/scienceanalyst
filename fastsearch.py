@@ -2,11 +2,15 @@ import base64
 import ignore
 import json
 import requests
+import datetime
 
 consumer_key = ignore.TWITTER_CONSUMER_KEY
 consumer_secret = ignore.TWITTER_CONSUMER_SECRET
 access_token = ignore.TWITTER_ACCESS_TOKEN
 access_secret = ignore.TWITTER_ACCESS_SECRET
+
+d = datetime.datetime.now()
+d = str(d.replace(second=0, microsecond=0))
 
 def get_bearer_token(consumer_key, consumer_secret):
     # get bearer token for application only requests
@@ -45,8 +49,17 @@ def super_fast_hashtag_query(query):
     r = requests.get(url, headers=headers)
 
     tweet_dictionary = json.loads(r.text)
-    print(tweet_dictionary['statuses'][0]['text'])
-    print(tweet_dictionary['statuses'][0]['entities']['hashtags'][0]['text'])
+    with open('datamining_{}.txt'.format(d), 'w') as f:
+        f.write(tweet_dictionary['statuses'][0]['created_at']+"\n")
+        f.write(tweet_dictionary['statuses'][0]['user']['id_str']+"\n")
+        f.write(tweet_dictionary['statuses'][0]['user']['name']+"\n")
+        f.write(tweet_dictionary['statuses'][0]['text']+"\n")
+
+        #print(tweet_dictionary['statuses'][0]['user']['id_str'])
+        #print(tweet_dictionary['statuses'][0]['user']['name'])
+        #print(tweet_dictionary['statuses'][0]['text'])
+    f.close()
+
 
 
 super_fast_hashtag_query(query)
