@@ -100,7 +100,7 @@ def super_fast_hashtag_query(query, oldestID = 0):
                 oldestID = items[len(items)-1]['id_str']
 
         #this is the last ID of the query -> timepoint 0 from which we go backwards 7-10 days
-         = str(tweet_dictionary['search_metadata']['max_id'])
+        newestID = str(tweet_dictionary['search_metadata']['max_id'])
 
         #using the oldest ID we start a new twitter SEARCH API query and append it to the data_dictionary
         super_fast_hashtag_query(query, oldestID)
