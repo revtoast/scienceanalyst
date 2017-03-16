@@ -1,10 +1,28 @@
 import base64
+import datetime
 from get_bearer_token import *
 import ignore
 import json
 import requests
-import datetime
+import sqlite3
 import time
+
+#define database name and cursor for sqlite3
+#CREATE TABLE `twitter` ( `tweetID` INTEGER NOT NULL UNIQUE, `date` TEXT NOT NULL, `userID` INTEGER NOT NULL, `userName` TEXT NOT NULL, `retweets` INTEGER NOT NULL, `tweetText` TEXT NOT NULL, PRIMARY KEY(`tweetID`) )
+conn = sqlite3.connect('DB/parser.db')
+c = conn.cursor()
+
+def database_entry(data_dictionary):
+    global table
+    global conn
+    global c
+    for key, value in data_dictionary.items():
+        c.execute("INSERT INTO twitter_"+query[3:].lower()+" (tweetID,date,userID,userName,retweets,tweetText) VALUES (?, ?, ?, ?, ?, ?)",
+          (key, value[0],value[1],value[2],value[3],value[4]))
+        conn.commit()
+    c.close
+    conn.close()
+    print("done - database filled.")
 
 
 #in order to only get minutious file names we set the second and microsecond
@@ -29,7 +47,7 @@ lastweek = today - datetime.timedelta(days=3)
 #     as well as some global variables          #
 #                                               #
 #-----------------------------------------------#
-query ='%23ICURehab'
+query ='%23stock'
 data_dictionary = {}
 newestID = 0
 # SEARCH API info: https://dev.twitter.com/rest/public/search
@@ -110,6 +128,7 @@ def super_fast_hashtag_query(query, oldestID = 0):
 super_fast_hashtag_query(query)
 #we print the length of the dictionary for debugging purposes
 print (len(data_dictionary))
+database_entry(data_dictionary)
 
 
 #for key, value in data_dictionary.items():

@@ -1,6 +1,8 @@
-import pandas
-from fastsearch import *
+import sqlite3
+import pandas as pd
+# Create your connection.
+cnx = sqlite3.connect('DB/parser.db')
 
-df = df.from_dict(data_dictionary)
+df = pd.read_sql_query("SELECT * FROM twitter_icurehab", cnx)
 
-df.head()
+print(df.head())
