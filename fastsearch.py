@@ -4,13 +4,32 @@ from get_bearer_token import *
 import ignore
 import json
 import requests
-import sqlite3
+#import sqlite3
+from unqlite import UnQLite
 import time
 
-#define database name and cursor for sqlite3
-#CREATE TABLE `twitter` ( `tweetID` INTEGER NOT NULL UNIQUE, `date` TEXT NOT NULL, `userID` INTEGER NOT NULL, `userName` TEXT NOT NULL, `retweets` INTEGER NOT NULL, `tweetText` TEXT NOT NULL, PRIMARY KEY(`tweetID`) )
-conn = sqlite3.connect('DB/parser.db')
-c = conn.cursor()
+##define database name and cursor for sqlite3
+##CREATE TABLE `twitter` ( `tweetID` INTEGER NOT NULL UNIQUE, `date` TEXT NOT NULL, `userID` INTEGER NOT NULL, `userName` TEXT NOT NULL, `retweets` INTEGER NOT NULL, `tweetText` TEXT NOT NULL, PRIMARY KEY(`tweetID`) )
+#conn = sqlite3.connect('DB/parser.db')
+#c = conn.cursor()
+
+db_file = './DB/test.udb'
+
+def unqlite_entry(data_dictionary):
+    db = UnQLite(db_file)
+    tweets = db.collection('tweets')
+    tweets.create()    # Create collection if it does not exist
+    for key, value in data_dictionary.items():
+        tweets.store({'tweetID': key,
+                       'date': value[0],
+                       'userID': value[1],
+                       'userName': value[2],
+                       'retweets': value[3],
+                       'tweetText': value[4]
+                     })
+    print("done - database filled.")
+    print("last record ID: ", tweets.last_record_id())
+
 
 def database_entry(data_dictionary):
     global table
@@ -128,7 +147,8 @@ def super_fast_hashtag_query(query, oldestID = 0):
 super_fast_hashtag_query(query)
 #we print the length of the dictionary for debugging purposes
 print (len(data_dictionary))
-database_entry(data_dictionary)
+##database_entry(data_dictionary)
+unqlite_entry(data_dictionary)
 
 
 #for key, value in data_dictionary.items():
